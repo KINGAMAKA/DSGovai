@@ -1,862 +1,432 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<title>ZamAI — Zambian AI Assistant (Prototype)</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>ZamAI</title>
 <style>
-  :root{
-    --bg:#0a0f0c;
-    --panel:#111a16;
-    --panel2:#16211c;
-    --line:#22302a;
-    --text:#e9f2ed;
-    --muted:#8ea49a;
-    --green:#1fa463;
-    --green2:#2ecc7a;
-    --orange:#e8892b;
-    --red:#d9442f;
-    --radius:16px;
-  }
-  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  html,body{height:100%;margin:0}
-  body{
-    background:radial-gradient(1200px 600px at 50% -10%, #12211a 0%, var(--bg) 60%);
-    color:var(--text);
-    font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
-    display:flex;flex-direction:column;height:100dvh;overflow:hidden;
-  }
-
-  /* ---------- HEADER ---------- */
-  header{
-    display:flex;align-items:center;gap:10px;
-    padding:12px 16px;border-bottom:1px solid var(--line);
-    background:rgba(10,15,12,.85);backdrop-filter:blur(8px);
-    flex-shrink:0;z-index:20;
-  }
-  .brand{display:flex;align-items:center;gap:10px;min-width:0}
-  .logo{
-    width:36px;height:36px;border-radius:11px;flex-shrink:0;
-    background:linear-gradient(135deg,var(--green2),var(--green) 60%,#0d6b40);
-    display:grid;place-items:center;font-size:18px;
-    box-shadow:0 0 22px rgba(46,204,122,.35);
-  }
-  .brand h1{font-size:17px;margin:0;letter-spacing:.3px}
-  .brand small{display:block;font-size:10.5px;color:var(--muted);letter-spacing:.6px;text-transform:uppercase}
-
-  .spacer{flex:1}
-
-  .icon-btn{
-    width:38px;height:38px;border-radius:11px;border:1px solid var(--line);
-    background:var(--panel);color:var(--text);font-size:16px;cursor:pointer;
-    display:grid;place-items:center;transition:.15s;
-  }
-  .icon-btn:hover{border-color:var(--green);background:var(--panel2)}
-  .icon-btn.on{border-color:var(--green);color:var(--green2);box-shadow:0 0 12px rgba(46,204,122,.25)}
-
-  /* ---------- GOV DROPDOWN ---------- */
-  .gov{position:relative}
-  .gov-btn{
-    display:flex;align-items:center;gap:7px;
-    padding:9px 13px;border-radius:11px;border:1px solid var(--line);
-    background:var(--panel);color:var(--text);font-size:13px;cursor:pointer;
-    white-space:nowrap;transition:.15s;font-family:inherit;
-  }
-  .gov-btn:hover{border-color:var(--green);background:var(--panel2)}
-  .gov-btn .flag{font-size:14px}
-  .gov-menu{
-    position:absolute;right:0;top:calc(100% + 8px);width:260px;
-    background:var(--panel2);border:1px solid var(--line);border-radius:14px;
-    padding:6px;display:none;flex-direction:column;gap:2px;
-    box-shadow:0 18px 40px rgba(0,0,0,.6);z-index:50;max-height:60vh;overflow:auto;
-  }
-  .gov-menu.open{display:flex}
-  .gov-menu button{
-    text-align:left;background:transparent;border:0;color:var(--text);
-    padding:10px 12px;border-radius:9px;font-size:13px;cursor:pointer;
-    display:flex;gap:9px;align-items:center;font-family:inherit;
-  }
-  .gov-menu button:hover{background:rgba(46,204,122,.12)}
-  .gov-menu .sub{display:block;font-size:11px;color:var(--muted);margin-top:2px}
-
-  /* ---------- STAGE ---------- */
-  #stage{
-    flex:1;overflow-y:auto;padding:18px 16px 8px;
-    display:flex;flex-direction:column;scroll-behavior:smooth;
-  }
-  #stage.empty{overflow:hidden;justify-content:center}
-
-  /* ---------- HERO (landing, non-scrollable) ---------- */
-  #hero{display:none;flex-direction:column;align-items:center;text-align:center;gap:14px;padding:8px 4px}
-  #stage.empty #hero{display:flex}
-  #hero h2{
-    font-size:clamp(26px,7vw,42px);margin:0;line-height:1.1;letter-spacing:-.5px;
-    background:linear-gradient(120deg,#fff 20%,var(--green2) 90%);
-    -webkit-background-clip:text;background-clip:text;color:transparent;
-  }
-  #hero p.sub{margin:0;color:var(--muted);font-size:14px;max-width:420px;line-height:1.5}
-  .cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:100%;max-width:520px;margin-top:6px}
-  .card{
-    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
-    padding:14px 13px;text-align:left;cursor:pointer;transition:.18s;
-    display:flex;flex-direction:column;gap:6px;
-  }
-  .card:hover{border-color:var(--green);background:var(--panel2);transform:translateY(-2px)}
-  .card .ic{font-size:20px}
-  .card b{font-size:13.5px;font-weight:600}
-  .card span{font-size:11.5px;color:var(--muted);line-height:1.4}
-  .hint{font-size:11.5px;color:var(--muted);margin-top:4px}
-  .hint b{color:var(--green2)}
-
-  /* ---------- MESSAGES ---------- */
-  #messages{display:flex;flex-direction:column;gap:14px;max-width:760px;width:100%;margin:0 auto}
-  .msg{display:flex;gap:9px;align-items:flex-start;animation:pop .25s ease}
-  @keyframes pop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-  .msg.user{flex-direction:row-reverse}
-  .avatar{
-    width:30px;height:30px;border-radius:9px;flex-shrink:0;display:grid;place-items:center;
-    font-size:14px;background:var(--panel2);border:1px solid var(--line);
-  }
-  .msg.user .avatar{background:linear-gradient(135deg,var(--green2),var(--green));border:0}
-  .bubble{
-    background:var(--panel);border:1px solid var(--line);border-radius:14px;
-    padding:11px 14px;font-size:14px;line-height:1.62;max-width:min(86%,560px);
-    word-wrap:break-word;overflow-wrap:anywhere;
-  }
-  .msg.user .bubble{
-    background:linear-gradient(135deg,rgba(46,204,122,.20),rgba(31,164,99,.14));
-    border-color:rgba(46,204,122,.4);
-  }
-  .bubble strong{color:var(--green2)}
-  .chips{display:flex;flex-wrap:wrap;gap:7px;margin:8px 0 0 39px}
-  .chip{
-    background:var(--panel2);border:1px solid var(--line);color:var(--text);
-    padding:7px 13px;border-radius:999px;font-size:12.5px;cursor:pointer;
-    font-family:inherit;transition:.15s;
-  }
-  .chip:hover{border-color:var(--green);color:var(--green2);background:rgba(46,204,122,.1)}
-
-  /* typing */
-  .typing .bubble{display:flex;gap:4px;align-items:center;padding:14px 16px}
-  .dot{width:7px;height:7px;border-radius:50%;background:var(--green2);opacity:.35;animation:bl 1.2s infinite}
-  .dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
-  @keyframes bl{0%,60%,100%{opacity:.25;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
-
-  /* ---------- INPUT BAR ---------- */
-  footer{
-    flex-shrink:0;border-top:1px solid var(--line);
-    background:rgba(10,15,12,.92);backdrop-filter:blur(10px);
-    padding:10px 14px 12px;
-  }
-  .input-wrap{
-    max-width:760px;margin:0 auto;display:flex;align-items:center;gap:8px;
-    background:var(--panel);border:1px solid var(--line);border-radius:999px;
-    padding:6px 6px 6px 16px;transition:.2s;
-  }
-  .input-wrap:focus-within{border-color:var(--green);box-shadow:0 0 0 3px rgba(46,204,122,.13)}
-  #input{
-    flex:1;background:transparent;border:0;outline:0;color:var(--text);
-    font-size:15px;font-family:inherit;padding:9px 0;min-width:0;
-  }
-  #input::placeholder{color:#5f7369}
-
-  .mic{
-    width:46px;height:46px;border-radius:50%;border:0;cursor:pointer;flex-shrink:0;
-    background:linear-gradient(135deg,var(--green2),var(--green));
-    color:#04120a;font-size:19px;display:grid;place-items:center;
-    box-shadow:0 0 20px rgba(46,204,122,.4);transition:.18s;
-  }
-  .mic:hover{transform:scale(1.06)}
-  .mic.listening{
-    background:linear-gradient(135deg,#ff6b57,var(--red));
-    color:#fff;animation:pulse 1.1s infinite;
-  }
-  @keyframes pulse{
-    0%{box-shadow:0 0 0 0 rgba(217,68,47,.6)}
-    70%{box-shadow:0 0 0 16px rgba(217,68,47,0)}
-    100%{box-shadow:0 0 0 0 rgba(217,68,47,0)}
-  }
-  .send{
-    width:42px;height:42px;border-radius:50%;border:1px solid var(--line);
-    background:var(--panel2);color:var(--green2);font-size:16px;cursor:pointer;
-    display:grid;place-items:center;flex-shrink:0;transition:.15s;
-  }
-  .send:hover{background:rgba(46,204,122,.15);border-color:var(--green)}
-  .foot-note{
-    max-width:760px;margin:8px auto 0;text-align:center;
-    font-size:10.5px;color:#5c7067;letter-spacing:.2px;
-  }
-
-  @media (max-width:420px){
-    .cards{grid-template-columns:1fr}
-    .brand small{display:none}
-  }
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:system-ui,-apple-system,sans-serif;background:#0a0f0c;color:#e9f2ed;display:flex;flex-direction:column;overflow:hidden;height:100vh}
+header{padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #22302a;flex-shrink:0}
+.logo{width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,#2ecc7a,#1fa463);display:grid;place-items:center;font-size:16px}
+header h1{font-size:16px;font-weight:600}
+.sp{flex:1}
+#micToggle{width:34px;height:34px;border-radius:10px;border:1px solid #22302a;background:#111a16;color:#e9f2ed;font-size:14px;cursor:pointer}
+#micToggle.on{border-color:#2ecc7a;color:#2ecc7a}
+main{flex:1;overflow-y:auto;display:flex;flex-direction:column;min-height:0}
+main.empty{justify-content:center;overflow:hidden}
+#hero{display:none;flex-direction:column;align-items:center;text-align:center;padding:24px;gap:16px}
+main.empty #hero{display:flex}
+#hero h2{font-size:28px;font-weight:600;background:linear-gradient(120deg,#fff,#2ecc7a);-webkit-background-clip:text;background-clip:text;color:transparent}
+#hero p{color:#8ea49a;font-size:13px}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:380px;margin-top:6px}
+.cards .card:last-child{grid-column:1/-1}
+.card{background:#111a16;border:1px solid #22302a;border-radius:14px;padding:14px 12px;text-align:left;cursor:pointer;color:#e9f2ed;font-family:inherit;font-size:13px;font-weight:600;display:flex;flex-direction:column;gap:4px;transition:.15s}
+.card:hover,.card:active{border-color:#2ecc7a;background:#16211c}
+.card .ic{font-size:18px}
+.card span{font-size:11px;color:#8ea49a;font-weight:400}
+#chat{flex:1;display:flex;flex-direction:column;gap:12px;padding:16px;max-width:640px;width:100%;margin:0 auto}
+.msg{display:flex;gap:8px;align-items:flex-start}
+.msg.user{flex-direction:row-reverse}
+.msg .av{width:26px;height:26px;border-radius:8px;background:#16211c;display:grid;place-items:center;font-size:12px;flex-shrink:0}
+.msg.user .av{background:#2ecc7a}
+.msg .b{padding:10px 13px;border-radius:13px;font-size:13.5px;line-height:1.55;max-width:82%;word-wrap:break-word;white-space:pre-wrap}
+.msg.bot .b{background:#111a16;border:1px solid #22302a}
+.msg.user .b{background:#1a3a28;border:1px solid rgba(46,204,122,.3)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-left:34px}
+.chip{padding:6px 11px;border-radius:20px;border:1px solid #22302a;background:#16211c;color:#e9f2ed;font-size:12px;cursor:pointer;font-family:inherit;transition:.15s}
+.chip:hover{border-color:#2ecc7a;color:#2ecc7a}
+footer{padding:10px 14px 14px;border-top:1px solid #22302a;flex-shrink:0;background:#0a0f0c}
+.ibar{max-width:640px;margin:0 auto;display:flex;align-items:center;gap:6px;background:#111a16;border:1px solid #22302a;border-radius:24px;padding:4px 4px 4px 14px}
+.ibar:focus-within{border-color:#2ecc7a}
+#input{flex:1;background:transparent;border:0;outline:0;color:#e9f2ed;font-size:14px;font-family:inherit;padding:9px 0;min-width:0}
+#mic,#send{width:40px;height:40px;border-radius:50%;border:0;cursor:pointer;flex-shrink:0;font-size:16px;display:grid;place-items:center}
+#mic{background:linear-gradient(135deg,#2ecc7a,#1fa463);color:#04120a}
+#mic.listening{background:linear-gradient(135deg,#ff6b57,#d9442f);color:#fff}
+#send{background:#16211c;color:#2ecc7a;border:1px solid #22302a}
+@media (max-width:400px){.cards{grid-template-columns:1fr}.cards .card:last-child{grid-column:auto}}
 </style>
 </head>
 <body>
 
-<!-- ================= HEADER ================= -->
 <header>
-  <div class="brand">
-    <div class="logo">🇿🇲</div>
-    <div>
-      <h1>ZamAI</h1>
-      <small>Zambian AI Assistant</small>
-    </div>
-  </div>
-
-  <div class="spacer"></div>
-
-  <button class="icon-btn on" id="voiceToggle" title="Toggle voice replies">🔊</button>
-
-  <div class="gov">
-    <button class="gov-btn" id="govBtn">
-      <span class="flag">🏛️</span> Government <span style="opacity:.6">▾</span>
-    </button>
-    <div class="gov-menu" id="govMenu">
-      <button data-gov="pacra">🏢 <div>PACRA<span class="sub">Business name & company registration</span></div></button>
-      <button data-gov="zra">💸 <div>ZRA — Pay Taxes<span class="sub">Tax returns, TPIN, e-services</span></div></button>
-      <button data-gov="napsa">🧾 <div>NAPSA<span class="sub">Social security contributions</span></div></button>
-      <button data-gov="nhima">🏥 <div>NHIMA<span class="sub">National health insurance</span></div></button>
-      <button data-gov="council">🏘️ <div>Council / Local Authority<span class="sub">Trading licence & permits</span></div></button>
-      <button data-gov="ip">™️ <div>PACRA — Trademarks<span class="sub">Protect your brand name</span></div></button>
-    </div>
-  </div>
+  <div class="logo">🇿🇲</div>
+  <h1>ZamAI</h1>
+  <div class="sp"></div>
+  <button id="micToggle" class="on" title="Voice">🔊</button>
 </header>
 
-<!-- ================= STAGE ================= -->
-<main id="stage" class="empty">
-  <section id="hero">
+<main id="main" class="empty">
+  <div id="hero">
     <h2>Talk to ZamAI</h2>
-    <p class="sub">Your Zambian business assistant. Speak or type — get a business name, a business plan, or tips to grow. 🇿🇲</p>
-
+    <p>Your Zambian AI assistant</p>
     <div class="cards">
-      <div class="card" data-svc="name">
-        <div class="ic">✨</div>
-        <b>Create a Business Name</b>
-        <span>Unique, PACRA-ready name ideas</span>
-      </div>
-      <div class="card" data-svc="plan">
-        <div class="ic">📋</div>
-        <b>Business Plan</b>
-        <span>Tell me your budget & sector</span>
-      </div>
-      <div class="card" data-svc="tips">
-        <div class="ic">💡</div>
-        <b>Business Tips</b>
-        <span>Practical advice for your hustle</span>
-      </div>
-      <div class="card" data-svc="explain">
-        <div class="ic">❓</div>
-        <b>Name vs Partnership</b>
-        <span>Don't know the difference? Ask me</span>
-      </div>
+      <button class="card" data-p="name"><span class="ic">✨</span>Business Name<span>Get name ideas</span></button>
+      <button class="card" data-p="plan"><span class="ic">📋</span>Business Plan<span>Build a simple plan</span></button>
+      <button class="card" data-p="tips"><span class="ic">💡</span>Business Tips<span>Practical advice</span></button>
     </div>
-
-    <p class="hint">Tap the <b>green mic</b> and just talk to me 👇</p>
-  </section>
-
-  <div id="messages"></div>
+  </div>
+  <div id="chat"></div>
 </main>
 
-<!-- ================= INPUT ================= -->
 <footer>
-  <div class="input-wrap">
-    <input id="input" type="text" placeholder="Ask ZamAI anything…" autocomplete="off" />
-    <button class="mic" id="mic" title="Tap to speak">🎙️</button>
-    <button class="send" id="send" title="Send">➤</button>
+  <div class="ibar">
+    <input id="input" type="text" placeholder="Ask anything…" autocomplete="off">
+    <button id="mic" title="Speak">🎙️</button>
+    <button id="send" title="Send">➤</button>
   </div>
-  <p class="foot-note">Prototype • Not affiliated with PACRA, ZRA, NAPSA or NHIMA • Always verify at the official office</p>
 </footer>
 
 <script>
-/* =========================================================
-   ZamAI prototype — front-end only, scripted agent logic
-   ========================================================= */
+(function(){
+"use strict";
 
-const stage    = document.getElementById('stage');
-const hero     = document.getElementById('hero');
-const messages = document.getElementById('messages');
-const input    = document.getElementById('input');
-const sendBtn  = document.getElementById('send');
-const micBtn   = document.getElementById('mic');
-const govBtn   = document.getElementById('govBtn');
-const govMenu  = document.getElementById('govMenu');
-const voiceToggle = document.getElementById('voiceToggle');
+var main=document.getElementById("main");
+var chat=document.getElementById("chat");
+var input=document.getElementById("input");
+var sendBtn=document.getElementById("send");
+var micBtn=document.getElementById("mic");
+var micToggle=document.getElementById("micToggle");
 
-let voiceOn = true;
-let busy = false;
-const S = { flow: null, step: 0, data: {} };
+var voiceOn=true;
+var busy=false;
+var flow=null;
+var step=0;
+var data={};
 
-/* ---------------- helpers ---------------- */
-function fmt(t){
-  return String(t)
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
-    .replace(/\n/g,'<br>');
-}
-function scrollBottom(){
-  requestAnimationFrame(()=>{ stage.scrollTop = stage.scrollHeight; });
-}
-function enterChatMode(){
-  if (stage.classList.contains('empty')){
-    stage.classList.remove('empty');
-    hero.style.display = 'none';
-  }
-}
+var KNOWLEDGE=[
+{k:["pacra","register","registration"],a:"PACRA handles business name registration and company registration in Zambia. Website: pacra.org.zm. Steps: name search, reserve, register."},
+{k:["tpin","tax pin"],a:"TPIN is your Taxpayer Identification Number from ZRA. You need it to do business. Register at zra.org.zm."},
+{k:["sole","partnership"],a:"Sole proprietorship = you alone, keep all profits, personally liable. Partnership = 2+ people share ownership and liability, needs a written agreement."},
+{k:["business name vs company","name and company"],a:"A business name is simpler and cheaper for sole traders. A company is a separate legal entity (Ltd) with shareholders - more paperwork, limits liability."},
+{k:["trading licence","licence","license","council"],a:"Every business in a council area needs a trading licence from the local authority. Food businesses also need a health certificate."},
+{k:["napsa","pension","social security"],a:"NAPSA is the National Pension Scheme Authority. Register as employer as soon as you hire your first employee. napsa.co.zm."},
+{k:["nhima","health insurance"],a:"NHIMA is the National Health Insurance Management Authority. Register yourself and employees, pay monthly, get covered at registered hospitals."},
+{k:["zra","tax","taxes"],a:"ZRA collects taxes. You need a TPIN, must file returns even if you owe nothing. Pay turnover tax, VAT, or PAYE depending on size. zra.org.zm."},
+{k:["turnover tax","tott"],a:"Turnover tax is a simplified tax for small businesses below a turnover threshold. It replaces income tax and VAT for those businesses. Check zra.org.zm."},
+{k:["vat","value added"],a:"VAT applies once turnover crosses the registration threshold. Register with ZRA, charge VAT on sales, claim on purchases."},
+{k:["cdf","constituency"],a:"CDF is the Constituency Development Fund - government funding for small businesses through your local council or MP's office."},
+{k:["ceec","citizen economic"],a:"CEEC is the Citizens Economic Empowerment Commission. Offers loans and empowerment funds to Zambian-owned businesses. ceec.org.zm."},
+{k:["bank account","open account"],a:"To open a business bank account: PACRA certificate, TPIN, ID, proof of address. Most banks require a minimum deposit."},
+{k:["price","pricing"],a:"Price = cost + transport + overheads + margin (aim 30%+). Never price below cost. Test with a few customers first."},
+{k:["records","bookkeeping"],a:"Keep a simple book: date, money in, money out, balance. Separate business money from personal money - this alone saves many small businesses."},
+{k:["marketing","advertise"],a:"On a small budget: WhatsApp status, Facebook Marketplace, local notice boards, word of mouth. Ask happy customers for referrals."},
+{k:["customers","find customers","get clients"],a:"Talk to 10 potential customers before launching. Find out where they shop and what's missing. First customers usually come from people you know."},
+{k:["business plan","plan"],a:"A simple business plan has 7 parts: summary, goals, products, market, budget, compliance, funding. One page is fine for small business."},
+{k:["how long register","cost register"],a:"Name search and reservation at PACRA is quick and cheap. Full registration takes days to weeks. Fees change - check pacra.org.zm."},
+{k:["after registering","next step","what next"],a:"After PACRA: 1) TPIN from ZRA. 2) Trading licence from council. 3) Business bank account. 4) NAPSA if hiring."}
+];
 
-/* ---------------- voice out ---------------- */
-function speak(text){
-  if (!voiceOn || !('speechSynthesis' in window)) return;
-  try{
-    speechSynthesis.cancel();
-    const clean = text.replace(/\*\*/g,'').replace(/[•▸]/g,'').slice(0,260);
-    const u = new SpeechSynthesisUtterance(clean);
-    u.lang = 'en-ZM';
-    u.rate = 1.02;
-    u.pitch = 1;
-    speechSynthesis.speak(u);
-  }catch(e){}
-}
-voiceToggle.addEventListener('click', ()=>{
-  voiceOn = !voiceOn;
-  voiceToggle.classList.toggle('on', voiceOn);
-  voiceToggle.textContent = voiceOn ? '🔊' : '🔇';
-  if (!voiceOn && 'speechSynthesis' in window) speechSynthesis.cancel();
-});
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
 
-/* ---------------- message renderers ---------------- */
+function enterChat(){if(main.className.indexOf("empty")!==-1){main.className="";main.id="main"}}
+
+function scrollDown(){setTimeout(function(){try{main.scrollTop=main.scrollHeight}catch(e){}},30)}
+
 function addUser(text){
-  enterChatMode();
-  const el = document.createElement('div');
-  el.className = 'msg user';
-  el.innerHTML = `<div class="avatar">🧑</div><div class="bubble">${fmt(text)}</div>`;
-  messages.appendChild(el);
-  scrollBottom();
+enterChat();
+var el=document.createElement("div");
+el.className="msg user";
+el.innerHTML='<div class="av">🧑</div><div class="b">'+esc(text)+'</div>';
+chat.appendChild(el);
+scrollDown();
 }
 
-function addBot(text, chips = []){
-  enterChatMode();
-  const el = document.createElement('div');
-  el.className = 'msg bot';
-  el.innerHTML = `<div class="avatar">🤖</div><div class="bubble">${fmt(text)}</div>`;
-  messages.appendChild(el);
-
-  if (chips.length){
-    const row = document.createElement('div');
-    row.className = 'chips';
-    chips.forEach(c=>{
-      const b = document.createElement('button');
-      b.className = 'chip';
-      b.textContent = c;
-      b.onclick = ()=>{ row.remove(); submit(c); };
-      row.appendChild(b);
-    });
-    messages.appendChild(row);
-  }
-  scrollBottom();
-  speak(text);
+function addBot(text,chips){
+enterChat();
+var el=document.createElement("div");
+el.className="msg bot";
+el.innerHTML='<div class="av">🤖</div><div class="b">'+esc(text)+'</div>';
+chat.appendChild(el);
+if(chips&&chips.length){
+var row=document.createElement("div");
+row.className="chips";
+for(var i=0;i<chips.length;i++){
+(function(lbl){
+var b=document.createElement("button");
+b.className="chip";
+b.textContent=lbl;
+b.onclick=function(){row.remove();send(lbl)};
+row.appendChild(b);
+})(chips[i]);
+}
+chat.appendChild(row);
+}
+scrollDown();
+speak(text);
 }
 
-let typingEl = null;
-function showTyping(){
-  if (typingEl) return;
-  typingEl = document.createElement('div');
-  typingEl.className = 'msg bot typing';
-  typingEl.innerHTML = `<div class="avatar">🤖</div><div class="bubble">
-      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-    </div>`;
-  messages.appendChild(typingEl);
-  scrollBottom();
-}
-function hideTyping(){
-  if (typingEl){ typingEl.remove(); typingEl = null; }
+function botSay(text,chips,delay){
+if(busy)return;
+busy=true;
+setTimeout(function(){
+try{addBot(text,chips)}catch(e){}
+busy=false;
+},delay||500);
 }
 
-/* bot replies after a short "thinking" pause */
-function botSay(text, chips = [], delay = 550){
-  busy = true;
-  showTyping();
-  setTimeout(()=>{
-    hideTyping();
-    addBot(text, chips);
-    busy = false;
-  }, delay + Math.random()*350);
+function speak(text){
+if(!voiceOn)return;
+if(!("speechSynthesis" in window))return;
+try{
+window.speechSynthesis.cancel();
+var u=new SpeechSynthesisUtterance(String(text).replace(/[•·]/g,",").slice(0,220));
+u.lang="en-ZM";
+u.rate=1.03;
+window.speechSynthesis.speak(u);
+}catch(e){}
 }
 
-/* ---------------- data ---------------- */
-const SECTOR_WORDS = {
-  agriculture: ['Agri','Farm','Harvest','Greenfields','Munda'],
-  retail:      ['Mart','Trading','Stores','Market','Bazaar'],
-  tech:        ['Tech','Digital','Systems','Labs','Byte'],
-  tourism:     ['Safari','Travel','Lodge','Tours','Adventures'],
-  food:        ['Kitchen','Foods','Bites','Grill','Cafe'],
-  transport:   ['Logistics','Trans','Movers','Cargo','Ride'],
-  mining:      ['Minerals','Mines','Resources','Copper'],
-  construction:['Builders','Constructions','Works','Structures'],
-  fashion:     ['Designs','Threads','Styles','Couture'],
-  education:   ['Academy','Learning','Skills','Tutor'],
-  health:      ['Care','Health','Clinic','Wellness'],
-  other:       ['Ventures','Enterprises','Solutions','Holdings']
+micToggle.onclick=function(){
+voiceOn=!voiceOn;
+if(voiceOn){micToggle.className="on";micToggle.textContent="🔊"}
+else{micToggle.className="";micToggle.textContent="🔇";
+if("speechSynthesis" in window){try{window.speechSynthesis.cancel()}catch(e){}}}
 };
-const PREFIXES = ['Zam','Kwacha','Ubuntu','Chalo','Mwana','Lusaka','Nkwazi','Tiyende','Sunzu','Kalulu','Bumi','Zambezi','Copperbelt','Kafue'];
-const SUFFIX_SOLE = ['Trading','Enterprises','Services','Investments','Supplies'];
-const SUFFIX_PART = ['& Partners','Associates','Holdings','Group','& Co'];
 
-function genNames(type, sector){
-  const words = SECTOR_WORDS[sector] || SECTOR_WORDS.other;
-  const suf   = type === 'partnership' ? SUFFIX_PART : SUFFIX_SOLE;
-  const out = new Set();
-  let guard = 0;
-  while (out.size < 5 && guard++ < 300){
-    const p = PREFIXES[Math.floor(Math.random()*PREFIXES.length)];
-    const w = words[Math.floor(Math.random()*words.length)];
-    const s = suf[Math.floor(Math.random()*suf.length)];
-    const style = Math.random();
-    let name;
-    if (style < 0.45)      name = `${p} ${w} ${s}`;
-    else if (style < 0.75) name = `${w} ${s}`;
-    else                   name = `${p} ${w}`;
-    out.add(name.replace(/\s+/g,' ').trim());
-  }
-  return [...out];
+function findKnowledge(text){
+var t=text.toLowerCase();
+for(var i=0;i<KNOWLEDGE.length;i++){
+var keys=KNOWLEDGE[i].k;
+for(var j=0;j<keys.length;j++){
+if(t.indexOf(keys[j])!==-1)return KNOWLEDGE[i].a;
+}
+}
+return null;
 }
 
-/* ---------------- FLOWS ---------------- */
+var PREFIXES=["Zam","Kwacha","Ubuntu","Chalo","Mwana","Lusaka","Nkwazi","Tiyende","Sunzu","Kalulu","Bumi","Zambezi","Copperbelt","Kafue"];
+var SECTORS={
+agriculture:["Agri","Farm","Harvest","Greenfields","Munda"],
+retail:["Mart","Trading","Stores","Market","Bazaar"],
+tech:["Tech","Digital","Systems","Labs","Byte"],
+tourism:["Safari","Travel","Lodge","Tours"],
+food:["Kitchen","Foods","Bites","Grill","Cafe"],
+transport:["Logistics","Trans","Movers","Cargo","Ride"],
+other:["Ventures","Enterprises","Solutions","Holdings"]
+};
+var SOLE_SUF=["Trading","Enterprises","Services","Investments","Supplies"];
+var PART_SUF=["& Partners","Associates","Holdings","Group","& Co"];
 
-/* 1. BUSINESS NAME */
-function startNameFlow(){
-  S.flow = 'name'; S.step = 0; S.data = {};
-  botSay(
-`Let's create your business name. ✨
-
-First — is this for a **sole proprietorship** (you alone) or a **partnership** (2 or more people)?
-
-If you're not sure, just tap "Explain the difference".`,
-    ['Sole proprietorship', 'Partnership', 'Explain the difference']
-  );
+function genNames(type,sector){
+var words=SECTORS[sector]||SECTORS.other;
+var suf=type==="partnership"?PART_SUF:SOLE_SUF;
+var out=[];
+var seen={};
+var guard=0;
+while(out.length<5&&guard++<200){
+var p=PREFIXES[Math.floor(Math.random()*PREFIXES.length)];
+var w=words[Math.floor(Math.random()*words.length)];
+var s=suf[Math.floor(Math.random()*suf.length)];
+var r=Math.random();
+var n;
+if(r<0.5)n=p+" "+w+" "+s;
+else if(r<0.8)n=w+" "+s;
+else n=p+" "+w;
+if(!seen[n]){seen[n]=true;out.push(n)}
 }
+return out;
+}
+
+function startName(){
+flow="name";step=0;data={};
+botSay("Let's create your business name.\n\nIs it for you alone (sole proprietor) or with partners (partnership)?",["Sole proprietor","Partnership"],400);
+}
+
 function nameFlow(text){
-  const t = text.toLowerCase();
-
-  if (S.step === 0){
-    if (t.includes('explain') || t.includes('difference') || t.includes('not sure')){
-      return explainFlow('name');
-    }
-    S.data.type = t.includes('partner') ? 'partnership' : 'sole';
-    S.step = 1;
-    return botSay(
-`Got it — a **${S.data.type === 'partnership' ? 'partnership' : 'sole proprietorship'}**. 👍
-
-Which sector are you in?`,
-      ['Agriculture','Retail','Tech','Food','Transport','Tourism','Construction','Other']
-    );
-  }
-
-  if (S.step === 1){
-    S.data.sector = Object.keys(SECTOR_WORDS).find(k => t.includes(k)) || 'other';
-    S.step = 2;
-    return nameFlowFinish();
-  }
+var t=text.toLowerCase();
+if(step===0){
+data.type=t.indexOf("partner")!==-1?"partnership":"sole";
+step=1;
+return botSay("Which sector?",["Agriculture","Retail","Tech","Food","Transport","Tourism","Other"],350);
 }
-function nameFlowFinish(){
-  const names = genNames(S.data.type, S.data.sector);
-  const list = names.map(n => `• **${n}**`).join('\n');
-  S.flow = null;
-
-  botSay(
-`Here are 5 name ideas for your ${S.data.sector} ${S.data.type === 'partnership' ? 'partnership' : 'business'}:
-
-${list}
-
-**Next steps (Zambia):**
-• Search the name at **PACRA** to check it's free
-• Reserve it (name search + reservation fee)
-• Register and get your **TPIN** from ZRA
-
-Want me to try again, or shall we build a **business plan**?`,
-    ['Try 5 more names', 'Create a business plan', 'Start over']
-  );
+if(step===1){
+var sector="other";
+var keys=Object.keys(SECTORS);
+for(var i=0;i<keys.length;i++){
+if(t.indexOf(keys[i])!==-1){sector=keys[i];break}
+}
+data.sector=sector;
+var names=genNames(data.type,sector);
+var list="";
+for(var j=0;j<names.length;j++)list+=(j+1)+". "+names[j]+"\n";
+flow=null;
+return botSay("Here are 5 names:\n\n"+list+"\nCheck availability at PACRA before registering.",["Try again","Start over"],600);
+}
 }
 
-/* 2. BUSINESS PLAN */
-function startPlanFlow(){
-  S.flow = 'plan'; S.step = 0; S.data = {};
-  botSay(
-`Let's build your business plan. 📋
-
-I'll ask you a few quick questions.
-
-**1.** What is the business called? (or type "no name yet")`
-  );
+function startPlan(){
+flow="plan";step=0;data={};
+botSay("Business plan time.\n\n1. What is the business called?",null,350);
 }
+
 function planFlow(text){
-  if (S.step === 0){
-    S.data.name = text.trim();
-    S.step = 1;
-    return botSay(`Nice. **2.** What sector is **${S.data.name}** in?`,
-      ['Agriculture','Retail','Tech','Food','Transport','Tourism','Construction','Other']);
-  }
-  if (S.step === 1){
-    const t = text.toLowerCase();
-    S.data.sector = Object.keys(SECTOR_WORDS).find(k => t.includes(k)) || 'other';
-    S.step = 2;
-    return botSay(`**3.** What's your starting budget in Kwacha? (e.g. "50,000")`);
-  }
-  if (S.step === 2){
-    const num = (text.match(/[\d,\.]+/) || ['0'])[0].replace(/,/g,'');
-    S.data.budget = parseInt(num, 10) || 0;
-    S.step = 3;
-    return botSay(`**4.** Where in Zambia will you operate? (e.g. Lusaka, Kitwe, Ndola…)`);
-  }
-  if (S.step === 3){
-    S.data.location = text.trim();
-    return planFinish();
-  }
+if(step===0){
+data.name=text.trim()||"Your Business";
+step=1;
+return botSay("2. Which sector?",["Agriculture","Retail","Tech","Food","Transport","Tourism","Other"],350);
 }
-function k(n){ return 'K' + n.toLocaleString('en-ZM'); }
-function planFinish(){
-  const d = S.data;
-  const b = d.budget || 0;
-  const ops  = Math.round(b * 0.40);
-  const mkt  = Math.round(b * 0.25);
-  const eqp  = Math.round(b * 0.20);
-  const cont = Math.round(b * 0.15);
-
-  S.flow = null;
-  botSay(
-`**Business Plan — ${d.name}**
-📍 ${d.location} · ${d.sector} · Budget: ${k(b)}
-
-**1. Executive Summary**
-${d.name} is a ${d.sector} venture based in ${d.location}, Zambia, launching with a starting capital of ${k(b)}.
-
-**2. Objectives**
-• Break even within 12 months
-• Build a loyal local customer base
-• Reinvest 20% of profit back into growth
-
-**3. Products / Services**
-Describe what you sell, your pricing, and what makes you different from competitors nearby.
-
-**4. Market Analysis**
-• Target customers: households & small businesses in ${d.location}
-• Competitors: identify 3 and note their weaknesses
-• Your edge: better service, fair pricing, local trust
-
-**5. Budget Breakdown**
-• Operations (rent, stock, salaries) — **${k(ops)}** (40%)
-• Marketing & customer acquisition — **${k(mkt)}** (25%)
-• Equipment & setup — **${k(eqp)}** (20%)
-• Contingency / savings — **${k(cont)}** (15%)
-
-**6. Compliance Checklist**
-• PACRA — register business name
-• ZRA — TPIN & tax registration
-• Local Council — trading licence
-• NAPSA / NHIMA — if you hire staff
-
-**7. Funding**
-With ${k(b)} you're covered for setup. If you need more, try CDF, CEEC, or a bank SME loan.
-
-Want me to expand any section, or give you **business tips** for ${d.sector}?`,
-    ['Give me business tips', 'Start over']
-  );
+if(step===1){
+var t=text.toLowerCase();
+var sector="other";
+var keys=Object.keys(SECTORS);
+for(var i=0;i<keys.length;i++){
+if(t.indexOf(keys[i])!==-1){sector=keys[i];break}
+}
+data.sector=sector;
+step=2;
+return botSay("3. Starting budget in Kwacha? (e.g. 50000)",null,350);
+}
+if(step===2){
+var m=text.match(/[\d,]+/);
+var num=m?parseInt(m[0].replace(/,/g,""),10):0;
+data.budget=num||0;
+step=3;
+return botSay("4. Where will you operate? (e.g. Lusaka)",null,350);
+}
+if(step===3){
+data.location=text.trim()||"Zambia";
+return finishPlan();
+}
 }
 
-/* 3. BUSINESS TIPS */
-function startTipsFlow(){
-  S.flow = 'tips'; S.step = 0; S.data = {};
-  botSay(`Happy to help. 💡 What sector is your business in?`,
-    ['Agriculture','Retail','Tech','Food','Transport','Tourism','Other']);
+function fmtK(n){return "K"+(n||0).toLocaleString()}
+
+function finishPlan(){
+var d=data;
+var b=d.budget||0;
+var txt="Business Plan - "+d.name+"\n"+
+"Location: "+d.location+" | Sector: "+d.sector+" | Budget: "+fmtK(b)+"\n\n"+
+"1. Summary\n"+d.name+" is a "+d.sector+" business in "+d.location+" starting with "+fmtK(b)+".\n\n"+
+"2. Budget split\n"+
+"Operations: "+fmtK(Math.round(b*0.4))+"\n"+
+"Marketing: "+fmtK(Math.round(b*0.25))+"\n"+
+"Equipment: "+fmtK(Math.round(b*0.2))+"\n"+
+"Reserve: "+fmtK(Math.round(b*0.15))+"\n\n"+
+"3. Compliance\n"+
+"PACRA - register name\n"+
+"ZRA - get TPIN\n"+
+"Council - trading licence\n"+
+"NAPSA/NHIMA - if hiring\n\n"+
+"Want tips for this sector?";
+flow=null;
+botSay(txt,["Business tips","Start over"],700);
 }
+
+function startTips(){
+flow="tips";step=0;data={};
+botSay("What sector is your business in?",["Agriculture","Retail","Tech","Food","Transport","Tourism","Other"],350);
+}
+
 function tipsFlow(text){
-  const t = text.toLowerCase();
-  const sector = Object.keys(SECTOR_WORDS).find(k => t.includes(k)) || 'other';
-  S.flow = null;
-
-  const tips = {
-    agriculture: ['Test your soil before planting — it saves money on fertilizer.',
-                  'Keep simple records of every bag of input and every kg harvested.',
-                  'Join a cooperative to access better market prices.',
-                  'Plan around the rainy season; irrigation pays for itself.',
-                  'Look into FISP and CEEC support programmes.'],
-    retail: ['Start with fast-moving stock, not everything at once.',
-             'Track stock daily — theft and dead stock kill small shops.',
-             'Price for profit: cost + transport + 30% minimum.',
-             'Accept mobile money; most customers prefer it.',
-             'Build relationships — loyal customers return.'],
-    tech:   ['Solve one real problem well before adding features.',
-             'Charge from day one, even a small amount.',
-             'Start with a WhatsApp group as your first "app".',
-             'Document everything — you will forget.',
-             'Register the name and get a domain early.'],
-    food:   ['Cost every plate — food businesses fail on hidden costs.',
-             'Consistency beats variety; perfect 5 dishes first.',
-             'Get a health certificate from your council.',
-             'Location and visibility matter more than décor.',
-             'Use social media — photos of food sell themselves.'],
-    transport:['Maintain vehicles before they break — repairs cost double.',
-                'Know your true cost per km including fuel, tyres, service.',
-                'Get goods-in-transit insurance for cargo.',
-                'Keep a logbook of every trip and expense.',
-                'Build a base of regular clients, not one-off trips.'],
-    tourism:['Partner with lodges and tour operators for referrals.',
-             'Get listed on Google Maps and TripAdvisor.',
-             'Seasonality is real — save in high season for low season.',
-             'Train guides on storytelling, not just facts.',
-             'Licensing from the Zambia Tourism Agency is required.'],
-    other:  ['Know your numbers — revenue, costs, profit, every week.',
-             'Separate business money from personal money immediately.',
-             'Start small, prove the model, then grow.',
-             'Register with PACRA and get a TPIN — it opens doors.',
-             'Talk to your customers; they'll tell you what to fix.']
-  };
-  const list = (tips[sector] || tips.other).map((x,i)=>`${i+1}. ${x}`).join('\n');
-
-  botSay(
-`**5 practical tips for a ${sector} business in Zambia** 🇿🇲
-
-${list}
-
-Want a **business plan** or a **business name** next?`,
-    ['Create a business plan', 'Create a business name', 'Start over']
-  );
+var t=text.toLowerCase();
+var sector="other";
+var keys=Object.keys(SECTORS);
+for(var i=0;i<keys.length;i++){
+if(t.indexOf(keys[i])!==-1){sector=keys[i];break}
 }
-
-/* 4. EXPLAIN NAME vs PARTNERSHIP */
-function explainFlow(mode){
-  S.flow = null;
-  const tail = mode === 'name'
-    ? ['Sole proprietorship', 'Partnership']
-    : ['Create a business name', 'Start over'];
-
-  botSay(
-`**Sole Proprietorship vs Partnership** — the simple version:
-
-**👤 Sole Proprietorship** (you alone)
-• You own and control everything
-• You keep all profits
-• You are **personally liable** for debts
-• Simplest and cheapest to register
-• Best for: one-person hustles, small shops, freelancers
-
-**🤝 Partnership** (2 or more people)
-• You and your partners share ownership
-• Profits split according to your agreement
-• Partners share liability — and risk conflict
-• Needs a **partnership agreement** in writing
-• Best for: businesses needing combined capital or skills
-
-**Bottom line:** start alone if it's just you. If you're bringing in a partner, write down who owns what *before* registering — it prevents fights later.
-
-Ready to create your name?`,
-    tail
-  );
-}
-
-/* 5. GOVERNMENT SERVICES */
-const GOV = {
-  pacra: `**PACRA — Patents & Companies Registration Agency** 🏢
-
-What you can do there:
-• Search whether a business name is available
-• Reserve a business name
-• Register a sole proprietorship or company
-• Register trademarks
-
-**Website:** pacra.org.zm
-**Tip:** do the name search first — it's the cheapest step and saves you from rejection.`,
-  zra: `**ZRA — Zambia Revenue Authority** 💸
-
-What you can do there:
-• Register for a **TPIN** (required to do business)
-• File your tax returns
-• Pay turnover tax, VAT, PAYE
-• Use the e-services portal online
-
-**Website:** zra.org.zm
-**Tip:** even small businesses must file — penalties build up quietly. Keep receipts.`,
-  napsa: `**NAPSA — National Pension Scheme Authority** 🧾
-
-What you can do there:
-• Register as an employer
-• Pay monthly social security contributions for staff
-• Check your contribution history
-
-**Website:** napsa.co.zm
-**Tip:** you must register with NAPSA as soon as you hire your first employee.`,
-  nhima: `**NHIMA — National Health Insurance Management Authority** 🏥
-
-What you can do there:
-• Register yourself and your employees
-• Pay monthly health insurance contributions
-• Access covered health services
-
-**Website:** nhima.co.zm
-**Tip:** contributions are a small percentage of salary and cover you at registered hospitals.`,
-  council: `**Council / Local Authority** 🏘️
-
-What you can do there:
-• Get a **trading licence** for your business
-• Get a health certificate (food businesses)
-• Pay levies and market fees
-• Get signage approval
-
-**Tip:** go to the council offices in your district — every business operating in a council area needs a licence.`,
-  ip: `**PACRA — Trademarks & Intellectual Property** ™️
-
-What you can do there:
-• Register your brand name and logo as a trademark
-• Protect your business identity from copycats
-
-**Website:** pacra.org.zm
-**Tip:** register *before* you print packaging or signage. It's cheaper than rebranding.`
+var tips={
+agriculture:["Test your soil before buying fertilizer.","Join a cooperative for better market prices.","Keep records of every bag in and every kg out.","Plan around the rainy season - irrigation pays for itself.","Check FISP and CEEC for support."],
+retail:["Start with fast-moving stock only.","Price = cost + transport + 30% minimum.","Accept mobile money - most customers prefer it.","Track stock daily; theft and dead stock kill shops.","Build regulars - loyal customers return."],
+tech:["Solve one real problem well.","Charge from day one, even a small amount.","Start with a WhatsApp group as v1.","Document everything.","Register the name and buy a domain early."],
+food:["Cost every plate - most food businesses fail on hidden costs.","Perfect 5 dishes first; consistency beats variety.","Get a health certificate from your council.","Location matters more than decor.","Post food photos on social media - they sell themselves."],
+transport:["Maintain vehicles before they break.","Know your true cost per km.","Get goods-in-transit insurance.","Keep a logbook of every trip.","Build a base of regular clients."],
+tourism:["Partner with lodges for referrals.","List on Google Maps and TripAdvisor.","Save in high season for low season.","Train guides on storytelling, not just facts.","Get licensed by Zambia Tourism Agency."],
+other:["Know your numbers every week.","Separate business money from personal money.","Start small, prove the model, then grow.","Register with PACRA and get a TPIN.","Ask customers what to fix - they will tell you."]
 };
+var arr=tips[sector]||tips.other;
+var txt="5 tips for "+sector+":\n\n";
+for(var i=0;i<arr.length;i++)txt+=(i+1)+". "+arr[i]+"\n";
+flow=null;
+botSay(txt,["Business plan","Business name","Start over"],600);
+}
 
-/* ---------------- INTENT ROUTER ---------------- */
 function handle(text){
-  const t = text.toLowerCase().trim();
+var t=text.toLowerCase().trim();
 
-  /* active flow takes priority */
-  if (S.flow === 'name')  return nameFlow(text);
-  if (S.flow === 'plan')  return planFlow(text);
-  if (S.flow === 'tips')  return tipsFlow(text);
+if(flow==="name")return nameFlow(text);
+if(flow==="plan")return planFlow(text);
+if(flow==="tips")return tipsFlow(text);
 
-  /* quick answers to chips */
-  if (t === 'start over' || t === 'reset'){
-    S.flow = null; S.step = 0; S.data = {};
-    return botSay(`Fresh start. 🙂 What would you like to do?`,
-      ['Create a business name','Create a business plan','Business tips','Explain name vs partnership']);
-  }
-  if (t.includes('try 5 more') || t.includes('more names')){
-    return startNameFlow();
-  }
+if(t==="start over"||t==="reset"||t==="restart"){
+flow=null;step=0;data={};
+return botSay("Fresh start. What would you like to do?",["Business name","Business plan","Business tips"],350);
+}
+if(t==="try again"||t.indexOf("try again")!==-1)return startName();
 
-  /* intents */
-  if (t.includes('business name') || t.includes('name for my') || (t.includes('name') && t.includes('create')))
-    return startNameFlow();
+if(t.indexOf("business name")!==-1||t==="name")return startName();
+if(t.indexOf("business plan")!==-1||t==="plan")return startPlan();
+if(t.indexOf("tip")!==-1)return startTips();
 
-  if (t.includes('business plan') || t.includes('plan'))
-    return startPlanFlow();
+var k=findKnowledge(text);
+if(k)return botSay(k,["Business name","Business plan","Business tips"],450);
 
-  if (t.includes('tip') || t.includes('advice') || t.includes('grow my'))
-    return startTipsFlow();
-
-  if (t.includes('partnership') || t.includes('difference') || t.includes('sole'))
-    return explainFlow('name');
-
-  if (t.includes('pacra'))  return botSay(GOV.pacra, ['Create a business name','Start over']);
-  if (t.includes('zra') || t.includes('tax'))  return botSay(GOV.zra, ['Create a business plan','Start over']);
-  if (t.includes('napsa'))  return botSay(GOV.napsa, ['Start over']);
-  if (t.includes('nhima'))  return botSay(GOV.nhima, ['Start over']);
-  if (t.includes('council') || t.includes('licence') || t.includes('license'))
-    return botSay(GOV.council, ['Start over']);
-
-  /* greeting */
-  if (/^(hi|hello|hey|muli bwanji|how are you|good (morning|afternoon|evening))/.test(t)){
-    return botSay(
-`Muli bwanji! 👋 I'm **ZamAI**, your Zambian business assistant.
-
-I can help you with:
-• ✨ **Creating a business name**
-• 📋 **Building a business plan** (tell me your name & budget)
-• 💡 **Business tips** for your sector
-• 🏛️ **Government services** (PACRA, ZRA, NAPSA — use the menu top right)
-
-What would you like to start with?`,
-      ['Create a business name','Create a business plan','Business tips']
-    );
-  }
-
-  /* fallback */
-  botSay(
-`I'm a prototype, so I might not catch everything yet. 🙂 But here's what I do well:
-
-• **Create a business name** — just say "business name"
-• **Build a business plan** — say "business plan"
-• **Give business tips** — say "tips"
-• **Explain name vs partnership**
-• **Government services** — PACRA, ZRA, NAPSA (menu top right)
-
-Which one shall we start with?`,
-    ['Create a business name','Create a business plan','Business tips','Explain name vs partnership']
-  );
+if(/^(hi|hello|hey|muli bwanji|good morning|good afternoon|good evening)/.test(t)){
+return botSay("Muli bwanji! I'm ZamAI.\n\nI can help you with a business name, a business plan, or tips. Or ask me anything about PACRA, ZRA, NAPSA, NHIMA and more.",["Business name","Business plan","Business tips"],350);
 }
 
-/* ---------------- submit ---------------- */
-function submit(text){
-  const v = (text ?? input.value).trim();
-  if (!v || busy) return;
-  input.value = '';
-  addUser(v);
-  handle(v);
+botSay("I didn't quite catch that. Try:\n\n\"business name\" - get name ideas\n\"business plan\" - build a plan\n\"tips\" - sector advice\nOr ask about PACRA, TPIN, NAPSA, taxes.",["Business name","Business plan","Business tips","What is PACRA?"],450);
 }
 
-sendBtn.addEventListener('click', ()=>submit());
-input.addEventListener('keydown', e=>{
-  if (e.key === 'Enter'){ e.preventDefault(); submit(); }
-});
-
-/* ---------------- hero cards ---------------- */
-document.querySelectorAll('.card').forEach(c=>{
-  c.addEventListener('click', ()=>{
-    const svc = c.dataset.svc;
-    const label = c.querySelector('b').textContent;
-    addUser(label);
-    if (svc === 'name')    startNameFlow();
-    if (svc === 'plan')    startPlanFlow();
-    if (svc === 'tips')    startTipsFlow();
-    if (svc === 'explain') explainFlow('name');
-  });
-});
-
-/* ---------------- gov dropdown ---------------- */
-govBtn.addEventListener('click', e=>{
-  e.stopPropagation();
-  govMenu.classList.toggle('open');
-});
-document.addEventListener('click', ()=>govMenu.classList.remove('open'));
-govMenu.querySelectorAll('button').forEach(b=>{
-  b.addEventListener('click', ()=>{
-    govMenu.classList.remove('open');
-    const key = b.dataset.gov;
-    addUser(b.querySelector('div').childNodes[0].textContent.trim());
-    botSay(GOV[key], ['Create a business name','Start over']);
-  });
-});
-
-/* ---------------- voice input ---------------- */
-const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-let recog = null, listening = false;
-
-if (!SR){
-  micBtn.style.opacity = '.4';
-  micBtn.title = 'Voice input not supported in this browser — use Chrome or Edge';
-} else {
-  recog = new SR();
-  recog.lang = 'en-ZM';
-  recog.interimResults = false;
-  recog.maxAlternatives = 1;
-
-  recog.onstart = ()=>{ listening = true; micBtn.classList.add('listening'); micBtn.textContent = '⏹'; };
-  recog.onend   = ()=>{ listening = false; micBtn.classList.remove('listening'); micBtn.textContent = '🎙️'; };
-  recog.onerror = ()=>{ listening = false; micBtn.classList.remove('listening'); micBtn.textContent = '🎙️'; };
-  recog.onresult = (e)=>{
-    const transcript = e.results[0][0].transcript;
-    input.value = transcript;
-    setTimeout(()=>submit(), 250);
-  };
-
-  micBtn.addEventListener('click', ()=>{
-    if (listening){ recog.stop(); return; }
-    if ('speechSynthesis' in window) speechSynthesis.cancel();
-    try{ recog.start(); }catch(err){}
-  });
+function send(text){
+var v;
+if(typeof text==="string")v=text.trim();
+else v=input.value.trim();
+if(!v||busy)return;
+input.value="";
+addUser(v);
+handle(v);
 }
 
-/* focus input on desktop */
-if (window.matchMedia('(min-width:700px)').matches) input.focus();
+sendBtn.onclick=function(){send()};
+
+input.addEventListener("keydown",function(e){
+if(e.key==="Enter"){e.preventDefault();send()}
+});
+
+var cards=document.querySelectorAll(".card");
+for(var c=0;c<cards.length;c++){
+(function(btn){
+btn.onclick=function(){
+var p=btn.getAttribute("data-p");
+var label=btn.textContent.replace(/[\n\r]/g," ").replace(/\s+/g," ").trim();
+addUser(label);
+if(p==="name")startName();
+else if(p==="plan")startPlan();
+else if(p==="tips")startTips();
+};
+})(cards[c]);
+}
+
+var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+var recog=null;
+var listening=false;
+
+if(!SR){
+micBtn.style.opacity="0.4";
+micBtn.title="Voice not supported - try Chrome on Android";
+}else{
+recog=new SR();
+recog.lang="en-ZM";
+recog.interimResults=false;
+recog.maxAlternatives=1;
+recog.onstart=function(){listening=true;micBtn.className="listening";micBtn.textContent="⏹"};
+recog.onend=function(){listening=false;micBtn.className="";micBtn.textContent="🎙️"};
+recog.onerror=function(){listening=false;micBtn.className="";micBtn.textContent="🎙️"};
+recog.onresult=function(e){
+var t=e.results[0][0].transcript;
+input.value=t;
+setTimeout(function(){send()},250);
+};
+micBtn.onclick=function(){
+if(listening){try{recog.stop()}catch(err){}return}
+if("speechSynthesis" in window){try{window.speechSynthesis.cancel()}catch(e){}}
+try{recog.start()}catch(err){}
+};
+}
+
+})();
 </script>
 </body>
 </html>
